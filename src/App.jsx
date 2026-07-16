@@ -91,7 +91,7 @@ export default function App() {
         <div className="screen" style={{ padding: 22 }}>
           <h2>Couldn't load profiles</h2>
           <p style={{ fontSize: 13, color: 'var(--color-neutral-700)' }}>{loadError}</p>
-          <p style={{ fontSize: 13 }}>Check your GitHub connection settings, or switch to local demo mode.</p>
+          <p style={{ fontSize: 13 }}>Try refreshing the page in a moment.</p>
         </div>
       </div>
     );
