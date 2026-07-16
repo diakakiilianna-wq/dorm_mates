@@ -29,11 +29,11 @@ export const QUESTIONS = [
     { label: 'Friendly in passing, mostly separate lives', value: 2 },
     { label: 'Cordial roommates, that’s it', value: 1 },
   ]},
-  { id: 'q3', axis: 'sleep', prompt: 'What’s your natural sleep schedule most weeknights?', options: [
-    { label: 'Early bird', value: 5 },
-    { label: 'Fairly early, flexible if needed', value: 4 },
-    { label: 'Flexible, no strong pattern', value: 3 },
-    { label: 'Night owl, my best hours are late', value: 1 },
+  { id: 'q3', axis: 'sleep', prompt: 'What time do you usually wake up on a typical weekday?', options: [
+    { label: 'Before 7:00 AM', value: 5 },
+    { label: '7:00 – 9:00 AM', value: 4 },
+    { label: '9:00 – 11:00 AM', value: 3 },
+    { label: 'After 11:00 AM', value: 1 },
   ]},
   { id: 'q4', axis: 'conflict', prompt: 'A roommate does something that bugs you. What’s your instinct?', options: [
     { label: 'Bring it up right away, directly', value: 5 },

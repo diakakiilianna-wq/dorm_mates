@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { AXES } from '../lib/quizData.js';
 import { rankMatches } from '../lib/scoring.js';
 import TraitBar from '../components/TraitBar.jsx';
@@ -5,6 +6,7 @@ import VennScore from '../components/VennScore.jsx';
 
 export default function Results({ draftUser, allUsers, onSave, onRetake }) {
   const ranked = rankMatches(draftUser, allUsers, { limit: 5 });
+  const [bio, setBio] = useState(draftUser.bio || '');
 
   return (
     <div className="screen">
@@ -44,10 +46,19 @@ export default function Results({ draftUser, allUsers, onSave, onRetake }) {
             </div>
           ))}
         </div>
+
+        <h3 style={{ fontSize: 16, margin: '22px 0 4px' }}>Your bio</h3>
+        <p style={{ fontSize: 12, color: 'var(--color-neutral-600)', marginBottom: 10 }}>
+          Make it personal — add anything you felt wasn't captured by the questionnaire.
+        </p>
+        <textarea
+          className="input" value={bio} onChange={e => setBio(e.target.value)}
+          placeholder="Bio major, early riser, love a tidy kitchen..."
+        />
       </div>
       <div className="screen-footer">
         <button className="btn btn-secondary" onClick={onRetake}>Retake quiz</button>
-        <button className="btn btn-primary" onClick={onSave}>Save profile</button>
+        <button className="btn btn-primary" onClick={() => onSave(bio.trim())}>Save profile</button>
       </div>
     </div>
   );

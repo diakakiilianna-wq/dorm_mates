@@ -139,8 +139,8 @@ export default function App() {
             draftUser={draft}
             allUsers={users}
             onRetake={() => setOnboardingStep('weights')}
-            onSave={() => {
-              const saved = { ...draft, favorites: draft.favorites || [] };
+            onSave={bio => {
+              const saved = { ...draft, bio, favorites: draft.favorites || [] };
               setCurrentUser(saved);
               persist(saved);
               setActiveTab('browse');
