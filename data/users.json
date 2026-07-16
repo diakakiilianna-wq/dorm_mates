@@ -141,5 +141,52 @@
     },
     "favorites": [],
     "takenAt": "2026-07-16T19:54:05.092Z"
+  },
+  {
+    "id": "282e18ef-6042-47ff-ad29-8eef3c350ea1",
+    "name": "Nicholas Kyritz",
+    "gender": "man",
+    "bio": "I’m a Mech. E student. I wake at sunrise and go to sleep around 10:00pm. I like to do arts and crafts and tend to leave things out that I’m going to use later",
+    "weights": {
+      "clean": 0.29,
+      "sleep": 0.04881884637102479,
+      "noise": 0.31122755986313827,
+      "social": 0.020371774237532933,
+      "conflict": 0.04881884637102479,
+      "structure": 0.2807629731572792
+    },
+    "quizAnswers": {
+      "q1": 1,
+      "q2": 4,
+      "q3": 4,
+      "q4": 4,
+      "q5": 2,
+      "q6": 2,
+      "q7": 2,
+      "q8": 1,
+      "q9": 4,
+      "q10": 4,
+      "q11": 4,
+      "q12": 5,
+      "q13": 4,
+      "q14": 5,
+      "q15": 1,
+      "q16": 4,
+      "q17": 5,
+      "q18": 2,
+      "q19": 1,
+      "q20": 4,
+      "q21": 4
+    },
+    "scores": {
+      "clean": 2.25,
+      "sleep": 4.333333333333333,
+      "noise": 2,
+      "social": 3.8,
+      "conflict": 4.333333333333333,
+      "structure": 2.3333333333333335
+    },
+    "favorites": [],
+    "takenAt": "2026-07-16T20:03:29.074Z"
   }
 ]
