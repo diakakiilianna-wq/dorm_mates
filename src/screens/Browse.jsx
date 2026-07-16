@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { matchProfiles } from '../lib/scoring.js';
+import { rankMatches } from '../lib/scoring.js';
 import MatchCard from '../components/MatchCard.jsx';
 import { IconFilter } from '../components/icons.jsx';
 
@@ -7,11 +7,7 @@ export default function Browse({ currentUser, allUsers, favorites, onToggleFavor
   const [showFilters, setShowFilters] = useState(false);
   const [minScore, setMinScore] = useState(0);
 
-  const others = allUsers.filter(u => u.id !== currentUser.id && u.gender === currentUser.gender);
-  const ranked = others
-    .map(u => ({ user: u, ...matchProfiles(currentUser, u) }))
-    .filter(r => r.score >= minScore)
-    .sort((a, b) => b.score - a.score);
+  const ranked = rankMatches(currentUser, allUsers, { minScore });
 
   return (
     <div className="screen">

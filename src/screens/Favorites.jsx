@@ -5,7 +5,8 @@ export default function Favorites({ currentUser, allUsers, favorites, onToggleFa
   const favoriteUsers = favorites
     .map(id => allUsers.find(u => u.id === id))
     .filter(Boolean)
-    .map(u => ({ user: u, ...matchProfiles(currentUser, u) }));
+    .map(u => ({ user: u, ...matchProfiles(currentUser, u) }))
+    .sort((a, b) => b.score - a.score);
 
   return (
     <div className="screen">
@@ -20,7 +21,7 @@ export default function Favorites({ currentUser, allUsers, favorites, onToggleFa
             <p style={{ fontSize: 13, color: 'var(--color-neutral-600)', margin: 0 }}>No favorites yet — go to Browse and tap the heart on a profile you like.</p>
           </div>
         )}
-        {favoriteUsers.sort((a, b) => b.score - a.score).map(r => (
+        {favoriteUsers.map(r => (
           <div key={r.user.id} className="card" style={{ padding: 12, display: 'flex', gap: 12, alignItems: 'center' }}>
             <div style={{ width: 64, height: 64, borderRadius: 20, flexShrink: 0, background: 'linear-gradient(160deg,#ffe1d0,#ffc6a5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-heading)', fontSize: 20, color: 'var(--color-accent-700)' }}>
               {r.user.name[0]?.toUpperCase()}

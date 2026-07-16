@@ -1,14 +1,10 @@
 import { AXES } from '../lib/quizData.js';
-import { matchProfiles } from '../lib/scoring.js';
+import { rankMatches } from '../lib/scoring.js';
 import TraitBar from '../components/TraitBar.jsx';
 import VennScore from '../components/VennScore.jsx';
 
 export default function Results({ draftUser, allUsers, onSave, onRetake }) {
-  const others = allUsers.filter(u => u.id !== draftUser.id && u.gender === draftUser.gender);
-  const ranked = others
-    .map(u => ({ user: u, ...matchProfiles(draftUser, u) }))
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 5);
+  const ranked = rankMatches(draftUser, allUsers, { limit: 5 });
 
   return (
     <div className="screen">

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import ProgressBar from '../components/ProgressBar.jsx';
 import { AXES, DEFAULT_WEIGHTS } from '../lib/quizData.js';
+import { normalizeWeights } from '../lib/scoring.js';
 
 function defaultPcts() {
   return Object.fromEntries(AXES.map(a => [a.key, Math.round(DEFAULT_WEIGHTS[a.key] * 100)]));
@@ -9,24 +10,14 @@ function defaultPcts() {
 export default function Weights({ onNext, onBack }) {
   const [pcts, setPcts] = useState(defaultPcts);
 
+  // Sliders move independently while editing — no live rebalancing. Ratios are
+  // normalized into weights (summing to 1) only when leaving the screen.
   function setPct(key, newPct) {
-    newPct = Math.max(0, Math.min(100, newPct));
-    const others = AXES.filter(a => a.key !== key);
-    const othersSum = others.reduce((s, a) => s + pcts[a.key], 0);
-    const remaining = 100 - newPct;
-    const next = { ...pcts, [key]: newPct };
-    if (othersSum <= 0) {
-      others.forEach(a => { next[a.key] = remaining / others.length; });
-    } else {
-      others.forEach(a => { next[a.key] = (pcts[a.key] / othersSum) * remaining; });
-    }
-    setPcts(next);
+    setPcts(prev => ({ ...prev, [key]: Math.max(0, Math.min(100, newPct)) }));
   }
 
   function handleContinue() {
-    const total = AXES.reduce((s, a) => s + pcts[a.key], 0) || 1;
-    const weights = Object.fromEntries(AXES.map(a => [a.key, pcts[a.key] / total]));
-    onNext(weights);
+    onNext(normalizeWeights(pcts));
   }
 
   return (
@@ -35,20 +26,24 @@ export default function Weights({ onNext, onBack }) {
         <ProgressBar steps={4} current={2} />
         <div className="kicker">Step 2 of 4</div>
         <h1 style={{ fontSize: 24 }}>What matters most?</h1>
-        <p style={{ fontSize: 13, color: 'var(--color-neutral-600)' }}>Drag to set your priorities — they auto-balance to 100%.</p>
+        <p style={{ fontSize: 13, color: 'var(--color-neutral-600)' }}>Set how much each area matters to you — we balance them into priorities when you continue.</p>
       </div>
-      <div className="screen-body" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div className="screen-body" style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
         {AXES.map(a => (
           <div key={a.key}>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, marginBottom: 6 }}>
               <span style={{ fontWeight: 600 }}>{a.label}</span>
-              <span style={{ color: 'var(--color-accent-700)', fontWeight: 700 }}>{Math.round(pcts[a.key])}%</span>
+              <span style={{ color: 'var(--color-accent-700)', fontWeight: 700 }}>{Math.round(pcts[a.key])}</span>
             </div>
             <input
               type="range" min="0" max="100" value={Math.round(pcts[a.key])}
               onChange={e => setPct(a.key, Number(e.target.value))}
               style={{ width: '100%', accentColor: 'var(--color-accent)' }}
             />
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, marginTop: 4 }}>
+              <span className="tag tag-neutral">{a.low}</span>
+              <span className="tag tag-accent">{a.high}</span>
+            </div>
           </div>
         ))}
         <button className="btn btn-ghost" style={{ alignSelf: 'center' }} onClick={() => setPcts(defaultPcts())}>Reset to defaults</button>

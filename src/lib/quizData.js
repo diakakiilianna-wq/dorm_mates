@@ -2,13 +2,16 @@
 // consecutive questions share an axis (question 8 lands on "noise", matching
 // the reference mockup's "Question 8 of 21 — Noise tolerance" screen).
 
+// `low`/`high` describe what a small vs. large score on each axis means, shown
+// as an at-a-glance bubble under the weight sliders so people understand what
+// they're prioritizing. Directions match the quiz option values (5 = high).
 export const AXES = [
-  { key: 'clean', label: 'Cleanliness', defaultWeight: 0.25 },
-  { key: 'sleep', label: 'Sleep schedule', defaultWeight: 0.20 },
-  { key: 'noise', label: 'Noise tolerance', defaultWeight: 0.20 },
-  { key: 'social', label: 'Social & guests', defaultWeight: 0.15 },
-  { key: 'conflict', label: 'Conflict style', defaultWeight: 0.10 },
-  { key: 'structure', label: 'Structure', defaultWeight: 0.10 },
+  { key: 'clean', label: 'Cleaning', low: 'Relaxed about mess', high: 'Very tidy', defaultWeight: 0.25 },
+  { key: 'sleep', label: 'Sleep', low: 'Erratic is fine', high: 'Consistent schedule', defaultWeight: 0.20 },
+  { key: 'noise', label: 'Noise', low: 'Needs quiet', high: 'Fine with noise', defaultWeight: 0.20 },
+  { key: 'social', label: 'Socializing', low: 'Keeps to themselves', high: 'Very social', defaultWeight: 0.15 },
+  { key: 'conflict', label: 'Conflict', low: 'Avoids confrontation', high: 'Addresses head-on', defaultWeight: 0.10 },
+  { key: 'structure', label: 'Household rules', low: 'Go with the flow', high: 'Likes clear systems', defaultWeight: 0.10 },
 ];
 
 export const DEFAULT_WEIGHTS = Object.fromEntries(AXES.map(a => [a.key, a.defaultWeight]));

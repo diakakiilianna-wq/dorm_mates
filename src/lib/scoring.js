@@ -44,6 +44,17 @@ export function matchProfiles(viewer, other) {
   return { score, flags };
 }
 
+// Ranks candidate roommates for `viewer`: same gender, excluding self, each
+// scored + flagged and sorted best-first. Shared by Browse and Results.
+export function rankMatches(viewer, users, { minScore = 0, limit } = {}) {
+  const ranked = users
+    .filter(u => u.id !== viewer.id && u.gender === viewer.gender)
+    .map(u => ({ user: u, ...matchProfiles(viewer, u) }))
+    .filter(r => r.score >= minScore)
+    .sort((a, b) => b.score - a.score);
+  return limit == null ? ranked : ranked.slice(0, limit);
+}
+
 export function normalizeWeights(weights) {
   const total = AXES.reduce((s, a) => s + (weights[a.key] ?? 0), 0);
   if (total <= 0) return Object.fromEntries(AXES.map(a => [a.key, 1 / AXES.length]));
