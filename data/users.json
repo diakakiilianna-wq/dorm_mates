@@ -90,7 +90,9 @@
       "conflict": 5,
       "structure": 3.3333333333333335
     },
-    "favorites": [],
+    "favorites": [
+      "98556e0e-9ed6-49a7-8779-d7aa048914dd"
+    ],
     "takenAt": "2026-07-16T19:21:20.816Z"
   }
 ]
