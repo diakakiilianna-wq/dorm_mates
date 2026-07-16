@@ -1,1 +1,6 @@
-[]
+[
+  {
+    "id": "test-1",
+    "name": "Proxy Test"
+  }
+]
