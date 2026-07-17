@@ -2,7 +2,7 @@
 // write token server-side and proxies reads/writes of data/users.json. The
 // browser never sees a token.
 
-const WORKER_URL = 'https://dorm-mates-proxy.ajay-jagan2020.workers.dev/api/users';
+const WORKER_URL = 'https://dorm-mates-proxy.diakakiilianna.workers.dev/api/users';
 
 export class GithubConflictError extends Error {
   constructor() {
