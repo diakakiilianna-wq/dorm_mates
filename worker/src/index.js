@@ -3,7 +3,7 @@
 // the browser. Repo/branch/path are fixed on purpose — the client can't
 // redirect this at anyone else's repo.
 
-const REPO = { owner: 'Valerion-exe', repo: 'dorm_mates', branch: 'main' };
+const REPO = { owner: 'diakakiilianna-wq', repo: 'dorm_mates', branch: 'main' };
 const USERS_PATH = 'data/users.json';
 const API_ROOT = 'https://api.github.com';
 
