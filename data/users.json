@@ -897,7 +897,9 @@
       "conflict": 5,
       "structure": 5
     },
-    "favorites": [],
+    "favorites": [
+      "6481e80e-0250-4bca-b853-636d3937ce0d"
+    ],
     "takenAt": "2026-07-20T16:53:05.714Z"
   }
 ]
