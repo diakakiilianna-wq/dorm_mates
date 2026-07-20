@@ -22,7 +22,7 @@ export default function Settings({ currentUser, onSignOut, onRetake }) {
       <div className="screen-footer">
         <button className="btn btn-secondary" style={{ gap: 8 }} onClick={onSignOut}>
           <IconLogOut size={16} />
-          Different person's turn
+          Sign out
         </button>
       </div>
     </div>

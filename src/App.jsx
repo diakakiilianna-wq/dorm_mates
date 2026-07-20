@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { newId } from './lib/id.js';
 import { computeAxisScores, matchProfiles } from './lib/scoring.js';
 import { loadUsers, upsertUser } from './lib/dataStore.js';
+import { supabase } from './lib/supabaseClient.js';
 
-import NameGate from './screens/NameGate.jsx';
+import Auth from './screens/Auth.jsx';
 import AboutYou from './screens/AboutYou.jsx';
 import Motivation from './screens/Motivation.jsx';
 import Weights from './screens/Weights.jsx';
@@ -24,7 +24,10 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
 
-  const [phase, setPhase] = useState('nameGate'); // nameGate | onboarding | app
+  const [session, setSession] = useState(null);
+  const [authChecked, setAuthChecked] = useState(false);
+
+  const [phase, setPhase] = useState('loading'); // loading | onboarding | app
   const [onboardingStep, setOnboardingStep] = useState('aboutYou'); // aboutYou | motivation | weights | quiz | results
   const [draft, setDraft] = useState(emptyDraft());
 
@@ -39,6 +42,37 @@ export default function App() {
       .catch(e => setLoadError(e.message))
       .finally(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+      setAuthChecked(true);
+    });
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      setSession(nextSession);
+      if (!nextSession) {
+        setCurrentUser(null);
+        setPhase('loading');
+      }
+    });
+    return () => listener.subscription.unsubscribe();
+  }, []);
+
+  // Once we have a session and the roster is loaded, route to an existing
+  // profile or straight into onboarding for a brand-new account.
+  useEffect(() => {
+    if (!authChecked || loading || !session || currentUser) return;
+    const existing = users.find(u => u.id === session.user.id);
+    if (existing) {
+      setCurrentUser(existing);
+      setActiveTab('browse');
+      setPhase('app');
+    } else {
+      setDraft({ ...emptyDraft(), id: session.user.id, email: session.user.email || '' });
+      setOnboardingStep('aboutYou');
+      setPhase('onboarding');
+    }
+  }, [authChecked, loading, session, currentUser, users]);
 
   function refreshCurrentUserInList(user) {
     setUsers(list => {
@@ -55,22 +89,10 @@ export default function App() {
     upsertUser(user).catch(e => console.error('Failed to save profile:', e));
   }
 
-  function startRegister(name) {
-    setDraft({ ...emptyDraft(), id: newId(), name });
-    setOnboardingStep('aboutYou');
-    setPhase('onboarding');
-  }
-
   function startEdit(user) {
     setDraft({ ...user });
     setOnboardingStep('aboutYou');
     setPhase('onboarding');
-  }
-
-  function handleLogin(user) {
-    setCurrentUser(user);
-    setActiveTab('browse');
-    setPhase('app');
   }
 
   function toggleFavorite(userId) {
@@ -81,7 +103,7 @@ export default function App() {
     persist(next);
   }
 
-  if (loading) {
+  if (loading || !authChecked) {
     return <div className="app-shell"><div className="screen" style={{ alignItems: 'center', justifyContent: 'center' }}><p>Loading…</p></div></div>;
   }
 
@@ -97,10 +119,10 @@ export default function App() {
     );
   }
 
-  if (phase === 'nameGate') {
+  if (!session) {
     return (
       <div className="app-shell">
-        <NameGate users={users} onRegister={startRegister} onLogin={handleLogin} />
+        <Auth />
       </div>
     );
   }
@@ -112,7 +134,7 @@ export default function App() {
           <AboutYou
             initialName={draft.name}
             initialEmail={draft.email}
-            onBack={() => setPhase(currentUser ? 'app' : 'nameGate')}
+            onBack={() => currentUser ? setPhase('app') : supabase.auth.signOut()}
             onNext={data => { setDraft(d => ({ ...d, ...data })); setOnboardingStep('motivation'); }}
           />
         )}
@@ -153,7 +175,10 @@ export default function App() {
     );
   }
 
-  // phase === 'app'
+  if (phase !== 'app' || !currentUser) {
+    return <div className="app-shell"><div className="screen" style={{ alignItems: 'center', justifyContent: 'center' }}><p>Loading…</p></div></div>;
+  }
+
   const viewingUser = viewingUserId ? users.find(u => u.id === viewingUserId) : null;
   const viewingMatch = viewingUser && currentUser ? matchProfiles(currentUser, viewingUser) : null;
 
@@ -200,7 +225,7 @@ export default function App() {
         </div>
       )}
       {!overlay && activeTab === 'profile' && (
-        <Settings currentUser={currentUser} onSignOut={() => { setCurrentUser(null); setPhase('nameGate'); }} onRetake={() => startEdit(currentUser)} />
+        <Settings currentUser={currentUser} onSignOut={() => supabase.auth.signOut()} onRetake={() => startEdit(currentUser)} />
       )}
       {!overlay && <TabBar active={activeTab} onChange={setActiveTab} />}
     </div>
