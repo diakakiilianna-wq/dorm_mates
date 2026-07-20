@@ -17,7 +17,7 @@ import Settings from './screens/Settings.jsx';
 import TabBar from './components/TabBar.jsx';
 import { IconChat } from './components/icons.jsx';
 
-const emptyDraft = () => ({ id: null, name: '', gender: 'woman', bio: '', weights: null, quizAnswers: null });
+const emptyDraft = () => ({ id: null, name: '', email: '', gender: 'woman', bio: '', weights: null, quizAnswers: null });
 
 export default function App() {
   const [users, setUsers] = useState([]);
@@ -111,6 +111,7 @@ export default function App() {
         {onboardingStep === 'aboutYou' && (
           <AboutYou
             initialName={draft.name}
+            initialEmail={draft.email}
             onBack={() => setPhase(currentUser ? 'app' : 'nameGate')}
             onNext={data => { setDraft(d => ({ ...d, ...data })); setOnboardingStep('motivation'); }}
           />

@@ -1,10 +1,14 @@
 import { useState } from 'react';
 import ProgressBar from '../components/ProgressBar.jsx';
 
-export default function AboutYou({ initialName, onNext, onBack }) {
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export default function AboutYou({ initialName, initialEmail, onNext, onBack }) {
   const [name, setName] = useState(initialName || '');
+  const [email, setEmail] = useState(initialEmail || '');
   const [gender, setGender] = useState('woman');
   const [bio, setBio] = useState('');
+  const emailValid = EMAIL_RE.test(email.trim());
 
   return (
     <div className="screen">
@@ -20,6 +24,13 @@ export default function AboutYou({ initialName, onNext, onBack }) {
           <input className="input" value={name} onChange={e => setName(e.target.value)} />
         </div>
         <div className="field">
+          <label>Email</label>
+          <input className="input" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@school.edu" />
+          <p style={{ fontSize: 12, color: 'var(--color-neutral-600)', margin: '4px 0 0' }}>
+            Only used by the housing office to send a reminder if you haven't finished the quiz — never shown to other students.
+          </p>
+        </div>
+        <div className="field">
           <label>Gender</label>
           <div className="seg">
             <button className={`seg-opt${gender === 'woman' ? ' active' : ''}`} onClick={() => setGender('woman')}>Woman</button>
@@ -33,7 +44,7 @@ export default function AboutYou({ initialName, onNext, onBack }) {
       </div>
       <div className="screen-footer">
         <button className="btn btn-secondary" onClick={onBack}>Back</button>
-        <button className="btn btn-primary" disabled={!name.trim()} onClick={() => onNext({ name: name.trim(), gender, bio: bio.trim() })}>Continue</button>
+        <button className="btn btn-primary" disabled={!name.trim() || !emailValid} onClick={() => onNext({ name: name.trim(), email: email.trim(), gender, bio: bio.trim() })}>Continue</button>
       </div>
     </div>
   );
