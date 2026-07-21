@@ -195,7 +195,7 @@ export default function App() {
         />
       )}
       {overlay === 'messageThread' && viewingUser && (
-        <MessageThread user={viewingUser} score={viewingMatch.score} onBack={() => setOverlay(null)} />
+        <MessageThread currentUserId={currentUser.id} user={viewingUser} score={viewingMatch.score} onBack={() => setOverlay(null)} />
       )}
       {!overlay && activeTab === 'browse' && (
         <Browse

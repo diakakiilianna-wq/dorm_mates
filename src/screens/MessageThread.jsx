@@ -1,23 +1,51 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { IconChevronLeft, IconSend } from '../components/icons.jsx';
+import { fetchThread, sendMessage } from '../lib/messages.js';
 
-const SEED_MESSAGES = [
-  { from: 'them', text: 'Hi! Saw your profile — are you still looking for a place for next semester?' },
-  { from: 'me', text: 'Yes! Still looking. Are you tidy? That’s my biggest thing haha' },
-  { from: 'them', text: 'Extremely — my roommates call me the neat freak 😄' },
-];
+const POLL_INTERVAL_MS = 3000;
 
-// Fully mocked for this build: messages are seeded in-memory only and never
-// persisted (no messages.json write), per the confirmed v1 scope.
-export default function MessageThread({ user, score, onBack }) {
-  const [messages, setMessages] = useState(SEED_MESSAGES);
+export default function MessageThread({ currentUserId, user, score, onBack }) {
+  const [messages, setMessages] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [draft, setDraft] = useState('');
+  const [sending, setSending] = useState(false);
 
-  function send() {
+  useEffect(() => {
+    let cancelled = false;
+
+    async function poll() {
+      try {
+        const data = await fetchThread(currentUserId, user.id);
+        if (!cancelled) {
+          setMessages(data);
+          setError(null);
+        }
+      } catch (e) {
+        if (!cancelled) setError(e.message);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    poll();
+    const interval = setInterval(poll, POLL_INTERVAL_MS);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, [currentUserId, user.id]);
+
+  async function send() {
     const text = draft.trim();
-    if (!text) return;
-    setMessages(m => [...m, { from: 'me', text }]);
+    if (!text || sending) return;
+    setSending(true);
     setDraft('');
+    try {
+      const saved = await sendMessage(currentUserId, user.id, text);
+      setMessages(m => [...m, saved]);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setSending(false);
+    }
   }
 
   return (
@@ -37,18 +65,23 @@ export default function MessageThread({ user, score, onBack }) {
             <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-accent-700)' }}>{user.name}'s profile · {score}% match</span>
           </div>
         </div>
-        {messages.map((m, i) => (
+        {loading && <p style={{ fontSize: 13, color: 'var(--color-neutral-600)' }}>Loading messages…</p>}
+        {error && <p style={{ fontSize: 13, color: 'var(--color-danger-600, #c0392b)' }}>{error}</p>}
+        {!loading && !error && messages.length === 0 && (
+          <p style={{ fontSize: 13, color: 'var(--color-neutral-600)' }}>No messages yet — say hi!</p>
+        )}
+        {messages.map(m => (
           <div
-            key={i}
+            key={m.id}
             style={{
-              alignSelf: m.from === 'me' ? 'flex-end' : 'flex-start', maxWidth: '75%',
-              background: m.from === 'me' ? 'var(--color-accent)' : 'var(--color-surface)',
-              color: m.from === 'me' ? 'var(--color-accent-100)' : 'var(--color-text)',
+              alignSelf: m.sender_id === currentUserId ? 'flex-end' : 'flex-start', maxWidth: '75%',
+              background: m.sender_id === currentUserId ? 'var(--color-accent)' : 'var(--color-surface)',
+              color: m.sender_id === currentUserId ? 'var(--color-accent-100)' : 'var(--color-text)',
               padding: '10px 14px', fontSize: 14,
-              borderRadius: m.from === 'me' ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
+              borderRadius: m.sender_id === currentUserId ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
             }}
           >
-            {m.text}
+            {m.body}
           </div>
         ))}
       </div>
@@ -58,7 +91,7 @@ export default function MessageThread({ user, score, onBack }) {
           onKeyDown={e => e.key === 'Enter' && send()}
           placeholder={`Message ${user.name.split(' ')[0]}...`}
         />
-        <button onClick={send} style={{ width: 40, height: 40, borderRadius: 999, background: 'var(--color-accent)', color: 'var(--color-accent-100)', border: 'none', cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <button onClick={send} disabled={sending} style={{ width: 40, height: 40, borderRadius: 999, background: 'var(--color-accent)', color: 'var(--color-accent-100)', border: 'none', cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <IconSend size={17} />
         </button>
       </div>

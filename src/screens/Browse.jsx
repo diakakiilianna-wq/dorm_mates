@@ -11,7 +11,7 @@ export default function Browse({ currentUser, allUsers, favorites, onToggleFavor
 
   return (
     <div className="screen">
-      <div className="screen-header" style={{ paddingBottom: 8 }}>
+      <div className="screen-header" style={{ paddingBottom: 24 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
           <h1 style={{ fontSize: 28, margin: 0 }}>Browse</h1>
           <button
