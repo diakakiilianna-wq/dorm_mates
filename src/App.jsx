@@ -21,7 +21,7 @@ import TabBar from './components/TabBar.jsx';
 
 const emptyDraft = () => ({
   id: null, name: '', email: '', gender: 'woman', bio: '',
-  pronouns: '', yearMajor: '', instagram: '', snapchat: '',
+  pronouns: '', yearMajor: '', hometown: '', instagram: '', snapchat: '',
   weights: null, quizAnswers: null,
 });
 
@@ -212,7 +212,7 @@ export default function App() {
           <AboutYou
             initialName={draft.name}
             initialEmail={draft.email}
-            initialFields={{ pronouns: draft.pronouns, yearMajor: draft.yearMajor, instagram: draft.instagram, snapchat: draft.snapchat }}
+            initialFields={{ pronouns: draft.pronouns, yearMajor: draft.yearMajor, hometown: draft.hometown, instagram: draft.instagram, snapchat: draft.snapchat }}
             onBack={() => currentUser ? setPhase('app') : supabase.auth.signOut()}
             onNext={data => { setDraft(d => ({ ...d, ...data })); setOnboardingStep('motivation'); }}
           />

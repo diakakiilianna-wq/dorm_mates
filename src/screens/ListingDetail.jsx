@@ -10,7 +10,32 @@ function bandLabel(labels, score) {
   return labels[idx];
 }
 
+function InfoCell({ label, value }) {
+  return (
+    <div>
+      <div style={{ fontSize: 11, color: 'var(--color-neutral-600)', marginBottom: 3 }}>{label}</div>
+      <div style={{ fontSize: 14, fontWeight: 600 }}>{value}</div>
+    </div>
+  );
+}
+
+function SectionCard({ title, children }) {
+  return (
+    <div className="card" style={{ padding: 16 }}>
+      <h3 style={{ fontSize: 15, margin: '0 0 12px' }}>{title}</h3>
+      {children}
+    </div>
+  );
+}
+
 export default function ListingDetail({ currentUserId, user, score, flags, isFavorite, onToggleFavorite, onBack }) {
+  const basics = [
+    { label: 'Gender', value: user.gender === 'woman' ? 'Woman' : 'Man' },
+    user.pronouns && { label: 'Pronouns', value: user.pronouns },
+    user.yearMajor && { label: 'Year & major', value: user.yearMajor },
+    user.hometown && { label: 'Hometown', value: user.hometown },
+  ].filter(Boolean);
+
   return (
     <div className="screen">
       <div style={{ position: 'relative', height: 260, background: 'linear-gradient(160deg,#ffe1d0,#ffc6a5)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -25,50 +50,49 @@ export default function ListingDetail({ currentUserId, user, score, flags, isFav
           <IconHeart size={19} filled={isFavorite} />
         </button>
       </div>
-      <div className="screen-body" style={{ paddingTop: 20 }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
+      <div className="screen-body" style={{ paddingTop: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div>
           <h1 style={{ fontSize: 28, margin: 0 }}>{user.name}</h1>
-        </div>
-        <div style={{ fontSize: 13, color: 'var(--color-neutral-600)', margin: '4px 0 12px' }}>
-          {user.gender === 'woman' ? 'Woman' : 'Man'}
-          {user.pronouns ? ` · ${user.pronouns}` : ''}
-          {user.yearMajor ? ` · ${user.yearMajor}` : ''}
-        </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <span className="tag" style={{ background: 'var(--color-accent)', color: 'var(--color-accent-100)', fontWeight: 700 }}>{score}% match</span>
-          {flags.map(f => <span key={f} className="tag tag-neutral">{f}</span>)}
+          <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
+            <span className="tag" style={{ background: 'var(--color-accent)', color: 'var(--color-accent-100)', fontWeight: 700 }}>{score}% match</span>
+            {flags.map(f => <span key={f} className="tag tag-neutral">{f}</span>)}
+          </div>
         </div>
 
-        <div style={{ height: 1, background: 'var(--color-divider)', margin: '20px 0' }} />
+        <SectionCard title="Basics">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px 16px' }}>
+            {basics.map(b => <InfoCell key={b.label} label={b.label} value={b.value} />)}
+          </div>
+        </SectionCard>
 
-        <h3 style={{ fontSize: 16, marginBottom: 12 }}>Logistics</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px 16px', marginBottom: 20 }}>
-          <div><div style={{ fontSize: 11, color: 'var(--color-neutral-600)', marginBottom: 3 }}>Cleanliness</div><div style={{ fontSize: 14, fontWeight: 600 }}>{bandLabel(CLEAN_LABELS, user.scores.clean)}</div></div>
-          <div><div style={{ fontSize: 11, color: 'var(--color-neutral-600)', marginBottom: 3 }}>Sleep schedule</div><div style={{ fontSize: 14, fontWeight: 600 }}>{bandLabel(SLEEP_LABELS, user.scores.sleep)}</div></div>
-          <div><div style={{ fontSize: 11, color: 'var(--color-neutral-600)', marginBottom: 3 }}>Noise tolerance</div><div style={{ fontSize: 14, fontWeight: 600 }}>{bandLabel(NOISE_LABELS, user.scores.noise)}</div></div>
-          <div><div style={{ fontSize: 11, color: 'var(--color-neutral-600)', marginBottom: 3 }}>Guest frequency</div><div style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-neutral-500)', fontStyle: 'italic' }}>Not specified</div></div>
-        </div>
+        <SectionCard title="About">
+          <p style={{ fontSize: 14, lineHeight: 1.55, margin: 0 }}>
+            {user.bio || <span style={{ color: 'var(--color-neutral-500)', fontStyle: 'italic' }}>Not specified</span>}
+          </p>
+        </SectionCard>
 
-        <h3 style={{ fontSize: 16, marginBottom: 10 }}>About</h3>
-        <p style={{ fontSize: 14, lineHeight: 1.55 }}>{user.bio || <span style={{ color: 'var(--color-neutral-500)', fontStyle: 'italic' }}>Not specified</span>}</p>
+        <SectionCard title="Logistics">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px 16px' }}>
+            <InfoCell label="Cleanliness" value={bandLabel(CLEAN_LABELS, user.scores.clean)} />
+            <InfoCell label="Sleep schedule" value={bandLabel(SLEEP_LABELS, user.scores.sleep)} />
+            <InfoCell label="Noise tolerance" value={bandLabel(NOISE_LABELS, user.scores.noise)} />
+            <InfoCell label="Guest frequency" value={<span style={{ color: 'var(--color-neutral-500)', fontStyle: 'italic', fontWeight: 400 }}>Not specified</span>} />
+          </div>
+        </SectionCard>
 
         {(user.instagram || user.snapchat) && (
-          <>
-            <div style={{ height: 1, background: 'var(--color-divider)', margin: '20px 0' }} />
-            <h3 style={{ fontSize: 16, marginBottom: 10 }}>Social</h3>
+          <SectionCard title="Social">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {user.instagram && <div style={{ fontSize: 14 }}>Instagram · <strong>{user.instagram}</strong></div>}
               {user.snapchat && <div style={{ fontSize: 14 }}>Snapchat · <strong>{user.snapchat}</strong></div>}
             </div>
-          </>
+          </SectionCard>
         )}
 
-        <div style={{ height: 1, background: 'var(--color-divider)', margin: '20px 0' }} />
-        <h3 style={{ fontSize: 16, marginBottom: 4 }}>Contact</h3>
-        <div className="card" style={{ padding: '4px 14px' }}>
+        <SectionCard title="Contact">
           <ContactRequestField currentUserId={currentUserId} ownerId={user.id} field="email" label="Email" />
           <ContactRequestField currentUserId={currentUserId} ownerId={user.id} field="phone" label="Phone number" />
-        </div>
+        </SectionCard>
       </div>
     </div>
   );

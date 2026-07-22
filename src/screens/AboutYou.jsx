@@ -10,6 +10,7 @@ export default function AboutYou({ initialName, initialEmail, initialFields, onN
   const [bio, setBio] = useState('');
   const [pronouns, setPronouns] = useState(initialFields?.pronouns || '');
   const [yearMajor, setYearMajor] = useState(initialFields?.yearMajor || '');
+  const [hometown, setHometown] = useState(initialFields?.hometown || '');
   const [instagram, setInstagram] = useState(initialFields?.instagram || '');
   const [snapchat, setSnapchat] = useState(initialFields?.snapchat || '');
   const emailValid = EMAIL_RE.test(email.trim());
@@ -54,6 +55,10 @@ export default function AboutYou({ initialName, initialEmail, initialFields, onN
           <input className="input" value={yearMajor} onChange={e => setYearMajor(e.target.value)} placeholder="Sophomore, Computer Science" />
         </div>
         <div className="field">
+          <label>Hometown (optional)</label>
+          <input className="input" value={hometown} onChange={e => setHometown(e.target.value)} placeholder="Austin, TX" />
+        </div>
+        <div className="field">
           <label>Instagram (optional)</label>
           <input className="input" value={instagram} onChange={e => setInstagram(e.target.value)} placeholder="@yourhandle" />
         </div>
@@ -69,7 +74,8 @@ export default function AboutYou({ initialName, initialEmail, initialFields, onN
           disabled={!name.trim() || !emailValid}
           onClick={() => onNext({
             name: name.trim(), email: email.trim(), gender, bio: bio.trim(),
-            pronouns: pronouns.trim(), yearMajor: yearMajor.trim(), instagram: instagram.trim(), snapchat: snapchat.trim(),
+            pronouns: pronouns.trim(), yearMajor: yearMajor.trim(), hometown: hometown.trim(),
+            instagram: instagram.trim(), snapchat: snapchat.trim(),
           })}
         >
           Continue
