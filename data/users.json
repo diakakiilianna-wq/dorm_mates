@@ -1002,7 +1002,9 @@
       "conflict": 5,
       "structure": 5
     },
-    "favorites": [],
+    "favorites": [
+      "097c2d05-5ce0-46a0-a7b0-ed2572c674a4"
+    ],
     "takenAt": "2026-07-22T10:36:00.933Z"
   }
 ]
