@@ -951,5 +951,61 @@
       "097c2d05-5ce0-46a0-a7b0-ed2572c674a4"
     ],
     "takenAt": "2026-07-20T16:55:07.713Z"
+  },
+  {
+    "id": "a1477501-1491-4bb3-bf5e-04aa726f6ec2",
+    "name": "sofia",
+    "email": "sfilippidou75@gmail.com",
+    "gender": "woman",
+    "bio": "economics",
+    "pronouns": "she",
+    "yearMajor": "sophomore finance",
+    "hometown": "Athens Greece",
+    "instagram": "ddfvkjr",
+    "snapchat": "nrgjvngjn",
+    "weights": {
+      "clean": 0.16666666666666666,
+      "sleep": 0.16666666666666666,
+      "noise": 0.16666666666666666,
+      "social": 0.16666666666666666,
+      "conflict": 0.16666666666666666,
+      "structure": 0.16666666666666666
+    },
+    "quizAnswers": {
+      "q1": 5,
+      "q2": 5,
+      "q3": 5,
+      "q4": 5,
+      "q5": 5,
+      "q6": 5,
+      "q7": 5,
+      "q8": 5,
+      "q9": 5,
+      "q10": 5,
+      "q11": 5,
+      "q12": 5,
+      "q13": 5,
+      "q14": 5,
+      "q15": 5,
+      "q16": 5,
+      "q17": 5,
+      "q18": 5,
+      "q19": 5,
+      "q20": 5,
+      "q21": 5
+    },
+    "scores": {
+      "clean": 5,
+      "sleep": 5,
+      "noise": 5,
+      "social": 5,
+      "conflict": 5,
+      "structure": 5
+    },
+    "favorites": [
+      "097c2d05-5ce0-46a0-a7b0-ed2572c674a4",
+      "5fa55221-a598-4bf0-8773-980c6c6a4510"
+    ],
+    "takenAt": "2026-07-22T10:36:00.933Z"
   }
 ]
