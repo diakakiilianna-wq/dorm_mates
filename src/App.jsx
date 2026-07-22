@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { computeAxisScores, matchProfiles } from './lib/scoring.js';
 import { loadUsers, upsertUser } from './lib/dataStore.js';
 import { fetchConversations } from './lib/messages.js';
+import { fetchContactRequests } from './lib/contactRequests.js';
 import { supabase } from './lib/supabaseClient.js';
 
 import Auth from './screens/Auth.jsx';
@@ -18,7 +19,11 @@ import Messages from './screens/Messages.jsx';
 import Settings from './screens/Settings.jsx';
 import TabBar from './components/TabBar.jsx';
 
-const emptyDraft = () => ({ id: null, name: '', email: '', gender: 'woman', bio: '', weights: null, quizAnswers: null });
+const emptyDraft = () => ({
+  id: null, name: '', email: '', gender: 'woman', bio: '',
+  pronouns: '', yearMajor: '', instagram: '', snapchat: '',
+  weights: null, quizAnswers: null,
+});
 
 export default function App() {
   const [users, setUsers] = useState([]);
@@ -38,8 +43,10 @@ export default function App() {
   const [viewingUserId, setViewingUserId] = useState(null);
 
   const [conversations, setConversations] = useState([]);
+  const [contactRequests, setContactRequests] = useState([]);
   const [toast, setToast] = useState(null);
   const seenMessageIds = useRef(new Set());
+  const seenRequestStatus = useRef(new Map());
   const isFirstConversationsPoll = useRef(true);
   const toastTimer = useRef(null);
 
@@ -87,14 +94,20 @@ export default function App() {
     if (!currentUser) return;
     let cancelled = false;
 
+    function showToast(t) {
+      if (toastTimer.current) clearTimeout(toastTimer.current);
+      setToast(t);
+      toastTimer.current = setTimeout(() => setToast(null), 4000);
+    }
+
     async function poll() {
+      const isFirst = isFirstConversationsPoll.current;
+      isFirstConversationsPoll.current = false;
+
       try {
         const convos = await fetchConversations(currentUser.id);
         if (cancelled) return;
         setConversations(convos);
-
-        const isFirst = isFirstConversationsPoll.current;
-        isFirstConversationsPoll.current = false;
 
         for (const c of convos) {
           const msg = c.lastMessage;
@@ -105,12 +118,32 @@ export default function App() {
           if (overlay === 'messageThread' && viewingUserId === msg.sender_id) continue; // already viewing it
 
           const sender = users.find(u => u.id === msg.sender_id);
-          if (toastTimer.current) clearTimeout(toastTimer.current);
-          setToast({ senderId: msg.sender_id, name: sender?.name || 'Someone', body: msg.body });
-          toastTimer.current = setTimeout(() => setToast(null), 4000);
+          showToast({ kind: 'message', senderId: msg.sender_id, name: sender?.name || 'Someone', body: msg.body });
         }
       } catch (e) {
         console.error('Failed to poll conversations:', e);
+      }
+
+      try {
+        const reqs = await fetchContactRequests(currentUser.id);
+        if (cancelled) return;
+        setContactRequests(reqs);
+
+        for (const r of reqs) {
+          const prevStatus = seenRequestStatus.current.get(r.id);
+          seenRequestStatus.current.set(r.id, r.status);
+          if (isFirst) continue; // don't toast requests that predate this session
+
+          if (r.owner_id === currentUser.id && prevStatus === undefined && r.status === 'pending') {
+            const requester = users.find(u => u.id === r.requester_id);
+            showToast({ kind: 'request', senderId: r.requester_id, name: requester?.name || 'Someone', body: `wants your ${r.field === 'email' ? 'email' : 'phone number'}` });
+          } else if (r.requester_id === currentUser.id && prevStatus === 'pending' && r.status !== 'pending') {
+            const owner = users.find(u => u.id === r.owner_id);
+            showToast({ kind: 'request', senderId: r.owner_id, name: owner?.name || 'Someone', body: `${r.status} your ${r.field === 'email' ? 'email' : 'phone number'} request` });
+          }
+        }
+      } catch (e) {
+        console.error('Failed to poll contact requests:', e);
       }
     }
 
@@ -179,6 +212,7 @@ export default function App() {
           <AboutYou
             initialName={draft.name}
             initialEmail={draft.email}
+            initialFields={{ pronouns: draft.pronouns, yearMajor: draft.yearMajor, instagram: draft.instagram, snapchat: draft.snapchat }}
             onBack={() => currentUser ? setPhase('app') : supabase.auth.signOut()}
             onNext={data => { setDraft(d => ({ ...d, ...data })); setOnboardingStep('motivation'); }}
           />
@@ -227,13 +261,18 @@ export default function App() {
   const viewingUser = viewingUserId ? users.find(u => u.id === viewingUserId) : null;
   const viewingMatch = viewingUser && currentUser ? matchProfiles(currentUser, viewingUser) : null;
   const hasUnreadMessages = conversations.some(c => c.lastMessage.recipient_id === currentUser.id && !c.lastMessage.read);
+  const hasPendingRequests = contactRequests.some(r => r.owner_id === currentUser.id && r.status === 'pending');
 
   return (
     <div className="app-shell">
       {toast && (
         <div
           className="msg-toast"
-          onClick={() => { setActiveTab('messages'); setViewingUserId(toast.senderId); setOverlay('messageThread'); setToast(null); }}
+          onClick={() => {
+            setActiveTab('messages');
+            if (toast.kind === 'message') { setViewingUserId(toast.senderId); setOverlay('messageThread'); }
+            setToast(null);
+          }}
         >
           <div className="msg-toast-avatar">{toast.name[0]?.toUpperCase()}</div>
           <div className="msg-toast-body">
@@ -244,6 +283,7 @@ export default function App() {
       )}
       {overlay === 'listingDetail' && viewingUser && (
         <ListingDetail
+          currentUserId={currentUser.id}
           user={viewingUser}
           score={viewingMatch.score}
           flags={viewingMatch.flags}
@@ -283,7 +323,7 @@ export default function App() {
       {!overlay && activeTab === 'profile' && (
         <Settings currentUser={currentUser} onSignOut={() => supabase.auth.signOut()} onRetake={() => startEdit(currentUser)} />
       )}
-      {!overlay && <TabBar active={activeTab} onChange={setActiveTab} unread={hasUnreadMessages} />}
+      {!overlay && <TabBar active={activeTab} onChange={setActiveTab} unread={hasUnreadMessages || hasPendingRequests} />}
     </div>
   );
 }

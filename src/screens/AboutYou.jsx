@@ -3,11 +3,15 @@ import ProgressBar from '../components/ProgressBar.jsx';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export default function AboutYou({ initialName, initialEmail, onNext, onBack }) {
+export default function AboutYou({ initialName, initialEmail, initialFields, onNext, onBack }) {
   const [name, setName] = useState(initialName || '');
   const [email, setEmail] = useState(initialEmail || '');
   const [gender, setGender] = useState('woman');
   const [bio, setBio] = useState('');
+  const [pronouns, setPronouns] = useState(initialFields?.pronouns || '');
+  const [yearMajor, setYearMajor] = useState(initialFields?.yearMajor || '');
+  const [instagram, setInstagram] = useState(initialFields?.instagram || '');
+  const [snapchat, setSnapchat] = useState(initialFields?.snapchat || '');
   const emailValid = EMAIL_RE.test(email.trim());
 
   return (
@@ -41,10 +45,35 @@ export default function AboutYou({ initialName, initialEmail, onNext, onBack }) 
           <label>About you (optional)</label>
           <textarea className="input" value={bio} onChange={e => setBio(e.target.value)} placeholder="Bio major, early riser, love a tidy kitchen..." />
         </div>
+        <div className="field">
+          <label>Pronouns (optional)</label>
+          <input className="input" value={pronouns} onChange={e => setPronouns(e.target.value)} placeholder="she/her, he/him, they/them..." />
+        </div>
+        <div className="field">
+          <label>Year & major (optional)</label>
+          <input className="input" value={yearMajor} onChange={e => setYearMajor(e.target.value)} placeholder="Sophomore, Computer Science" />
+        </div>
+        <div className="field">
+          <label>Instagram (optional)</label>
+          <input className="input" value={instagram} onChange={e => setInstagram(e.target.value)} placeholder="@yourhandle" />
+        </div>
+        <div className="field">
+          <label>Snapchat (optional)</label>
+          <input className="input" value={snapchat} onChange={e => setSnapchat(e.target.value)} placeholder="yourhandle" />
+        </div>
       </div>
       <div className="screen-footer">
         <button className="btn btn-secondary" onClick={onBack}>Back</button>
-        <button className="btn btn-primary" disabled={!name.trim() || !emailValid} onClick={() => onNext({ name: name.trim(), email: email.trim(), gender, bio: bio.trim() })}>Continue</button>
+        <button
+          className="btn btn-primary"
+          disabled={!name.trim() || !emailValid}
+          onClick={() => onNext({
+            name: name.trim(), email: email.trim(), gender, bio: bio.trim(),
+            pronouns: pronouns.trim(), yearMajor: yearMajor.trim(), instagram: instagram.trim(), snapchat: snapchat.trim(),
+          })}
+        >
+          Continue
+        </button>
       </div>
     </div>
   );
