@@ -1060,5 +1060,58 @@
     },
     "favorites": [],
     "takenAt": "2026-07-22T11:08:59.932Z"
+  },
+  {
+    "id": "ed2ff6e3-3857-4731-a790-84e1e2c9346b",
+    "name": "Ivan S. Farfan Diaz",
+    "email": "ivan@anytrail.ai",
+    "gender": "man",
+    "bio": "SWE '26",
+    "pronouns": "he/him",
+    "yearMajor": "Software Engineering '26",
+    "hometown": "Hoboken, NJ",
+    "instagram": "",
+    "snapchat": "",
+    "weights": {
+      "clean": 0.18518518518518517,
+      "sleep": 0.13703703703703704,
+      "noise": 0.15,
+      "social": 0.18518518518518517,
+      "conflict": 0.1574074074074074,
+      "structure": 0.18518518518518517
+    },
+    "quizAnswers": {
+      "q1": 5,
+      "q2": 5,
+      "q3": 3,
+      "q4": 4,
+      "q5": 4,
+      "q6": 5,
+      "q7": 5,
+      "q8": 5,
+      "q9": 5,
+      "q10": 5,
+      "q11": 5,
+      "q12": 4,
+      "q13": 5,
+      "q14": 5,
+      "q15": 4,
+      "q16": 4,
+      "q17": 4,
+      "q18": 4,
+      "q19": 4,
+      "q20": 4,
+      "q21": 4
+    },
+    "scores": {
+      "clean": 4.75,
+      "sleep": 4,
+      "noise": 4.333333333333333,
+      "social": 4.4,
+      "conflict": 4.333333333333333,
+      "structure": 4.666666666666667
+    },
+    "favorites": [],
+    "takenAt": "2026-07-22T15:26:58.238Z"
   }
 ]
