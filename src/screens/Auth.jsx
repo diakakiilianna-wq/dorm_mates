@@ -43,6 +43,21 @@ export default function Auth() {
     }
   }
 
+  async function handleForgotPassword() {
+    if (!emailValid) {
+      setError('Enter your email above first, then tap "Forgot password?" again.');
+      return;
+    }
+    setBusy(true);
+    setError(null);
+    setNotice(null);
+    const redirectTo = window.location.origin + import.meta.env.BASE_URL;
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo });
+    setBusy(false);
+    if (resetError) return setError(resetError.message);
+    setNotice('If that email has an account, a reset link is on its way — check your inbox.');
+  }
+
   return (
     <div className="screen">
       <div className="screen-header">
@@ -77,6 +92,15 @@ export default function Auth() {
             onKeyDown={e => e.key === 'Enter' && handleSubmit()}
           />
         </div>
+        {mode === 'login' && (
+          <button
+            onClick={handleForgotPassword}
+            disabled={busy}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-accent-700)', fontSize: 12, padding: 0, textAlign: 'left' }}
+          >
+            Forgot password?
+          </button>
+        )}
         {error && <p style={{ fontSize: 13, color: 'var(--color-danger-600, #c0392b)' }}>{error}</p>}
         {notice && <p style={{ fontSize: 13, color: 'var(--color-neutral-700)' }}>{notice}</p>}
       </div>

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { IconChevronLeft, IconHeart } from '../components/icons.jsx';
 import ContactRequestField from '../components/ContactRequestField.jsx';
 
@@ -28,7 +29,42 @@ function SectionCard({ title, children }) {
   );
 }
 
-export default function ListingDetail({ currentUserId, user, score, flags, isFavorite, onToggleFavorite, onBack }) {
+export default function ListingDetail({ currentUserId, user, score, flags, isFavorite, onToggleFavorite, onBack, onBlock, onReport }) {
+  const [confirmingBlock, setConfirmingBlock] = useState(false);
+  const [blockBusy, setBlockBusy] = useState(false);
+  const [blockError, setBlockError] = useState(null);
+
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportReason, setReportReason] = useState('');
+  const [reportBusy, setReportBusy] = useState(false);
+  const [reportSent, setReportSent] = useState(false);
+  const [reportError, setReportError] = useState(null);
+
+  async function handleConfirmBlock() {
+    setBlockBusy(true);
+    setBlockError(null);
+    try {
+      await onBlock(user.id);
+      onBack();
+    } catch (e) {
+      setBlockError(e.message);
+      setBlockBusy(false);
+    }
+  }
+
+  async function handleSubmitReport() {
+    setReportBusy(true);
+    setReportError(null);
+    try {
+      await onReport(user.id, reportReason.trim());
+      setReportSent(true);
+    } catch (e) {
+      setReportError(e.message);
+    } finally {
+      setReportBusy(false);
+    }
+  }
+
   const basics = [
     { label: 'Gender', value: user.gender === 'woman' ? 'Woman' : 'Man' },
     user.pronouns && { label: 'Pronouns', value: user.pronouns },
@@ -93,6 +129,56 @@ export default function ListingDetail({ currentUserId, user, score, flags, isFav
           <ContactRequestField currentUserId={currentUserId} ownerId={user.id} field="email" label="Email" />
           <ContactRequestField currentUserId={currentUserId} ownerId={user.id} field="phone" label="Phone number" />
         </SectionCard>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: '4px 4px 20px' }}>
+          {!reportOpen ? (
+            <button
+              onClick={() => setReportOpen(true)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-neutral-600)', fontSize: 12, textAlign: 'left', padding: 0 }}
+            >
+              Report this profile
+            </button>
+          ) : reportSent ? (
+            <p style={{ fontSize: 12, color: 'var(--color-neutral-600)' }}>Thanks — this has been reported for review.</p>
+          ) : (
+            <div className="card" style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <label style={{ fontSize: 12, fontWeight: 600 }}>Why are you reporting {user.name}? (optional)</label>
+              <textarea
+                className="input" value={reportReason} onChange={e => setReportReason(e.target.value)}
+                placeholder="Add any details that would help..." style={{ minHeight: 60 }}
+              />
+              {reportError && <p style={{ fontSize: 12, color: 'var(--color-danger-600, #c0392b)', margin: 0 }}>{reportError}</p>}
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button className="btn btn-secondary" style={{ width: 'auto', fontSize: 12, padding: '7px 14px' }} onClick={() => setReportOpen(false)} disabled={reportBusy}>Cancel</button>
+                <button className="btn btn-primary" style={{ width: 'auto', fontSize: 12, padding: '7px 14px' }} onClick={handleSubmitReport} disabled={reportBusy}>
+                  {reportBusy ? 'Submitting…' : 'Submit report'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {!confirmingBlock ? (
+            <button
+              onClick={() => setConfirmingBlock(true)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-danger-600, #c0392b)', fontSize: 12, textAlign: 'left', padding: 0 }}
+            >
+              Block {user.name}
+            </button>
+          ) : (
+            <div className="card" style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <p style={{ fontSize: 12, margin: 0 }}>
+                Block {user.name}? They won't be able to message you, request your contact info, or see your profile — and you won't see theirs.
+              </p>
+              {blockError && <p style={{ fontSize: 12, color: 'var(--color-danger-600, #c0392b)', margin: 0 }}>{blockError}</p>}
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button className="btn btn-secondary" style={{ width: 'auto', fontSize: 12, padding: '7px 14px' }} onClick={() => setConfirmingBlock(false)} disabled={blockBusy}>Cancel</button>
+                <button className="btn btn-primary" style={{ width: 'auto', fontSize: 12, padding: '7px 14px', background: 'var(--color-danger-600, #c0392b)' }} onClick={handleConfirmBlock} disabled={blockBusy}>
+                  {blockBusy ? 'Blocking…' : 'Confirm block'}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

@@ -3,7 +3,7 @@ import { IconEdit, IconLogOut } from '../components/icons.jsx';
 import { supabase } from '../lib/supabaseClient.js';
 import { updateOwnPhone } from '../lib/contactRequests.js';
 
-export default function Settings({ currentUser, onSignOut, onRetake }) {
+export default function Settings({ currentUser, onSignOut, onEditProfile, onRetakeQuiz }) {
   const [phone, setPhone] = useState('');
   const [savedPhone, setSavedPhone] = useState('');
   const [saving, setSaving] = useState(false);
@@ -60,10 +60,15 @@ export default function Settings({ currentUser, onSignOut, onRetake }) {
         </button>
 
         <h3 style={{ fontSize: 15, margin: '24px 0 10px' }}>Your profile</h3>
-        <button className="btn btn-secondary" style={{ gap: 8 }} onClick={onRetake}>
-          <IconEdit size={16} />
-          Edit profile / retake quiz
-        </button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <button className="btn btn-secondary" style={{ gap: 8 }} onClick={onEditProfile}>
+            <IconEdit size={16} />
+            Edit profile
+          </button>
+          <button className="btn btn-secondary" style={{ gap: 8 }} onClick={onRetakeQuiz}>
+            Retake compatibility quiz
+          </button>
+        </div>
       </div>
       <div className="screen-footer">
         <button className="btn btn-secondary" style={{ gap: 8 }} onClick={onSignOut}>

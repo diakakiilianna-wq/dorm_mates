@@ -3,9 +3,12 @@ import { computeAxisScores, matchProfiles } from './lib/scoring.js';
 import { loadUsers, upsertUser } from './lib/dataStore.js';
 import { fetchConversations } from './lib/messages.js';
 import { fetchContactRequests } from './lib/contactRequests.js';
+import { blockUser, fetchBlockedUserIds } from './lib/blocks.js';
+import { reportUser } from './lib/reports.js';
 import { supabase } from './lib/supabaseClient.js';
 
 import Auth from './screens/Auth.jsx';
+import ResetPassword from './screens/ResetPassword.jsx';
 import AboutYou from './screens/AboutYou.jsx';
 import Motivation from './screens/Motivation.jsx';
 import Weights from './screens/Weights.jsx';
@@ -16,6 +19,7 @@ import ListingDetail from './screens/ListingDetail.jsx';
 import Favorites from './screens/Favorites.jsx';
 import MessageThread from './screens/MessageThread.jsx';
 import Messages from './screens/Messages.jsx';
+import EditProfile from './screens/EditProfile.jsx';
 import Settings from './screens/Settings.jsx';
 import TabBar from './components/TabBar.jsx';
 
@@ -32,6 +36,9 @@ export default function App() {
 
   const [session, setSession] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
+  const [passwordRecovery, setPasswordRecovery] = useState(false);
+
+  const [blockedUserIds, setBlockedUserIds] = useState(new Set());
 
   const [phase, setPhase] = useState('loading'); // loading | onboarding | app
   const [onboardingStep, setOnboardingStep] = useState('aboutYou'); // aboutYou | motivation | weights | quiz | results
@@ -62,8 +69,9 @@ export default function App() {
       setSession(data.session);
       setAuthChecked(true);
     });
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+    const { data: listener } = supabase.auth.onAuthStateChange((event, nextSession) => {
       setSession(nextSession);
+      if (event === 'PASSWORD_RECOVERY') setPasswordRecovery(true);
       if (!nextSession) {
         setCurrentUser(null);
         setPhase('loading');
@@ -71,6 +79,11 @@ export default function App() {
     });
     return () => listener.subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (!currentUser) return;
+    fetchBlockedUserIds(currentUser.id).then(setBlockedUserIds).catch(e => console.error('Failed to load blocked users:', e));
+  }, [currentUser]);
 
   // Once we have a session and the roster is loaded, route to an existing
   // profile or straight into onboarding for a brand-new account.
@@ -181,8 +194,25 @@ export default function App() {
     persist(next);
   }
 
+  async function handleBlock(blockedId) {
+    await blockUser(currentUser.id, blockedId);
+    setBlockedUserIds(prev => new Set(prev).add(blockedId));
+  }
+
+  async function handleReport(reportedId, reason) {
+    await reportUser(currentUser.id, reportedId, reason);
+  }
+
   if (loading || !authChecked) {
     return <div className="app-shell"><div className="screen" style={{ alignItems: 'center', justifyContent: 'center' }}><p>Loading…</p></div></div>;
+  }
+
+  if (passwordRecovery) {
+    return (
+      <div className="app-shell">
+        <ResetPassword onDone={() => setPasswordRecovery(false)} />
+      </div>
+    );
   }
 
   if (loadError) {
@@ -262,6 +292,8 @@ export default function App() {
   const viewingMatch = viewingUser && currentUser ? matchProfiles(currentUser, viewingUser) : null;
   const hasUnreadMessages = conversations.some(c => c.lastMessage.recipient_id === currentUser.id && !c.lastMessage.read);
   const hasPendingRequests = contactRequests.some(r => r.owner_id === currentUser.id && r.status === 'pending');
+  // Blocked users (either direction) disappear from Browse/Favorites/Messages.
+  const visibleUsers = users.filter(u => !blockedUserIds.has(u.id));
 
   return (
     <div className="app-shell">
@@ -290,15 +322,29 @@ export default function App() {
           isFavorite={currentUser.favorites.includes(viewingUser.id)}
           onToggleFavorite={() => toggleFavorite(viewingUser.id)}
           onBack={() => setOverlay(null)}
+          onBlock={handleBlock}
+          onReport={handleReport}
         />
       )}
       {overlay === 'messageThread' && viewingUser && (
         <MessageThread currentUserId={currentUser.id} user={viewingUser} score={viewingMatch.score} onBack={() => setOverlay(null)} />
       )}
+      {overlay === 'editProfile' && (
+        <EditProfile
+          currentUser={currentUser}
+          onBack={() => setOverlay(null)}
+          onSave={updated => {
+            const saved = { ...currentUser, ...updated };
+            setCurrentUser(saved);
+            persist(saved);
+            setOverlay(null);
+          }}
+        />
+      )}
       {!overlay && activeTab === 'browse' && (
         <Browse
           currentUser={currentUser}
-          allUsers={users}
+          allUsers={visibleUsers}
           favorites={currentUser.favorites}
           onToggleFavorite={toggleFavorite}
           onOpen={id => { setViewingUserId(id); setOverlay('listingDetail'); }}
@@ -307,7 +353,7 @@ export default function App() {
       {!overlay && activeTab === 'favorites' && (
         <Favorites
           currentUser={currentUser}
-          allUsers={users}
+          allUsers={visibleUsers}
           favorites={currentUser.favorites}
           onToggleFavorite={toggleFavorite}
           onMessage={id => { setViewingUserId(id); setOverlay('messageThread'); }}
@@ -316,12 +362,17 @@ export default function App() {
       {!overlay && activeTab === 'messages' && (
         <Messages
           currentUser={currentUser}
-          allUsers={users}
+          allUsers={visibleUsers}
           onOpen={id => { setViewingUserId(id); setOverlay('messageThread'); }}
         />
       )}
       {!overlay && activeTab === 'profile' && (
-        <Settings currentUser={currentUser} onSignOut={() => supabase.auth.signOut()} onRetake={() => startEdit(currentUser)} />
+        <Settings
+          currentUser={currentUser}
+          onSignOut={() => supabase.auth.signOut()}
+          onEditProfile={() => setOverlay('editProfile')}
+          onRetakeQuiz={() => startEdit(currentUser)}
+        />
       )}
       {!overlay && <TabBar active={activeTab} onChange={setActiveTab} unread={hasUnreadMessages || hasPendingRequests} />}
     </div>
