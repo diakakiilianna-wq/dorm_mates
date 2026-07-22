@@ -1,8 +1,17 @@
 import { useEffect, useState } from 'react';
-import { IconChevronLeft, IconSend } from '../components/icons.jsx';
-import { fetchThread, sendMessage } from '../lib/messages.js';
+import { IconChevronLeft, IconSend, IconTrash } from '../components/icons.jsx';
+import { deleteMessage, fetchThread, markThreadRead, sendMessage } from '../lib/messages.js';
 
 const POLL_INTERVAL_MS = 3000;
+
+function formatTimestamp(iso) {
+  const d = new Date(iso);
+  const now = new Date();
+  const sameDay = d.toDateString() === now.toDateString();
+  const time = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  if (sameDay) return time;
+  return `${d.toLocaleDateString([], { month: 'short', day: 'numeric' })}, ${time}`;
+}
 
 export default function MessageThread({ currentUserId, user, score, onBack }) {
   const [messages, setMessages] = useState([]);
@@ -33,6 +42,10 @@ export default function MessageThread({ currentUserId, user, score, onBack }) {
     return () => { cancelled = true; clearInterval(interval); };
   }, [currentUserId, user.id]);
 
+  useEffect(() => {
+    markThreadRead(user.id).catch(e => console.error('Failed to mark thread read:', e));
+  }, [user.id]);
+
   async function send() {
     const text = draft.trim();
     if (!text || sending) return;
@@ -48,6 +61,17 @@ export default function MessageThread({ currentUserId, user, score, onBack }) {
     }
   }
 
+  async function handleDelete(id) {
+    const prev = messages;
+    setMessages(m => m.filter(msg => msg.id !== id));
+    try {
+      await deleteMessage(id);
+    } catch (e) {
+      setMessages(prev);
+      setError(e.message);
+    }
+  }
+
   return (
     <div className="screen">
       <div style={{ flexShrink: 0, padding: '20px 20px 12px', display: 'flex', alignItems: 'center', gap: 12, borderBottom: '1px solid var(--color-divider)' }}>
@@ -59,7 +83,7 @@ export default function MessageThread({ currentUserId, user, score, onBack }) {
         </div>
         <div style={{ fontFamily: 'var(--font-heading)', fontSize: 16 }}>{user.name}</div>
       </div>
-      <div className="screen-body" style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingTop: 14 }}>
+      <div className="screen-body" style={{ display: 'flex', flexDirection: 'column', gap: 12, paddingTop: 14 }}>
         <div className="card" style={{ padding: '12px 14px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--color-accent-700)' }}>{user.name}'s profile · {score}% match</span>
@@ -70,20 +94,24 @@ export default function MessageThread({ currentUserId, user, score, onBack }) {
         {!loading && !error && messages.length === 0 && (
           <p style={{ fontSize: 13, color: 'var(--color-neutral-600)' }}>No messages yet — say hi!</p>
         )}
-        {messages.map(m => (
-          <div
-            key={m.id}
-            style={{
-              alignSelf: m.sender_id === currentUserId ? 'flex-end' : 'flex-start', maxWidth: '75%',
-              background: m.sender_id === currentUserId ? 'var(--color-accent)' : 'var(--color-surface)',
-              color: m.sender_id === currentUserId ? 'var(--color-accent-100)' : 'var(--color-text)',
-              padding: '10px 14px', fontSize: 14,
-              borderRadius: m.sender_id === currentUserId ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
-            }}
-          >
-            {m.body}
-          </div>
-        ))}
+        {messages.map(m => {
+          const mine = m.sender_id === currentUserId;
+          return (
+            <div key={m.id} className={`msg-row ${mine ? 'me' : 'them'}`}>
+              <div className="msg-meta">
+                <span>{mine ? 'You' : user.name.split(' ')[0]}</span>
+                <span>·</span>
+                <span>{formatTimestamp(m.created_at)}</span>
+                {mine && (
+                  <button className="msg-delete-btn" onClick={() => handleDelete(m.id)} aria-label="Delete message">
+                    <IconTrash size={12} />
+                  </button>
+                )}
+              </div>
+              <div className="msg-bubble">{m.body}</div>
+            </div>
+          );
+        })}
       </div>
       <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px 24px', borderTop: '1px solid var(--color-divider)' }}>
         <input

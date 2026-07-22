@@ -41,3 +41,16 @@ export async function sendMessage(senderId, recipientId, body) {
   if (error) throw error;
   return data;
 }
+
+export async function deleteMessage(id) {
+  const { error } = await supabase.from('messages').delete().eq('id', id);
+  if (error) throw error;
+}
+
+// Marks every unread message from `otherUserId` to the caller as read, via
+// an RPC (rather than a general UPDATE policy) so recipients can't edit
+// message bodies while flipping the read flag.
+export async function markThreadRead(otherUserId) {
+  const { error } = await supabase.rpc('mark_thread_read', { other_user_id: otherUserId });
+  if (error) throw error;
+}

@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { computeAxisScores, matchProfiles } from './lib/scoring.js';
 import { loadUsers, upsertUser } from './lib/dataStore.js';
+import { fetchConversations } from './lib/messages.js';
 import { supabase } from './lib/supabaseClient.js';
 
 import Auth from './screens/Auth.jsx';
@@ -35,6 +36,12 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('browse');
   const [overlay, setOverlay] = useState(null); // null | listingDetail | messageThread
   const [viewingUserId, setViewingUserId] = useState(null);
+
+  const [conversations, setConversations] = useState([]);
+  const [toast, setToast] = useState(null);
+  const seenMessageIds = useRef(new Set());
+  const isFirstConversationsPoll = useRef(true);
+  const toastTimer = useRef(null);
 
   useEffect(() => {
     loadUsers()
@@ -73,6 +80,44 @@ export default function App() {
       setPhase('onboarding');
     }
   }, [authChecked, loading, session, currentUser, users]);
+
+  // Polls conversations for the unread badge and new-message toasts,
+  // independent of whichever tab is active.
+  useEffect(() => {
+    if (!currentUser) return;
+    let cancelled = false;
+
+    async function poll() {
+      try {
+        const convos = await fetchConversations(currentUser.id);
+        if (cancelled) return;
+        setConversations(convos);
+
+        const isFirst = isFirstConversationsPoll.current;
+        isFirstConversationsPoll.current = false;
+
+        for (const c of convos) {
+          const msg = c.lastMessage;
+          if (seenMessageIds.current.has(msg.id)) continue;
+          seenMessageIds.current.add(msg.id);
+          if (isFirst) continue; // don't toast messages that predate this session
+          if (msg.sender_id === currentUser.id) continue;
+          if (overlay === 'messageThread' && viewingUserId === msg.sender_id) continue; // already viewing it
+
+          const sender = users.find(u => u.id === msg.sender_id);
+          if (toastTimer.current) clearTimeout(toastTimer.current);
+          setToast({ senderId: msg.sender_id, name: sender?.name || 'Someone', body: msg.body });
+          toastTimer.current = setTimeout(() => setToast(null), 4000);
+        }
+      } catch (e) {
+        console.error('Failed to poll conversations:', e);
+      }
+    }
+
+    poll();
+    const interval = setInterval(poll, 5000);
+    return () => { cancelled = true; clearInterval(interval); };
+  }, [currentUser, overlay, viewingUserId, users]);
 
   function refreshCurrentUserInList(user) {
     setUsers(list => {
@@ -181,9 +226,22 @@ export default function App() {
 
   const viewingUser = viewingUserId ? users.find(u => u.id === viewingUserId) : null;
   const viewingMatch = viewingUser && currentUser ? matchProfiles(currentUser, viewingUser) : null;
+  const hasUnreadMessages = conversations.some(c => c.lastMessage.recipient_id === currentUser.id && !c.lastMessage.read);
 
   return (
     <div className="app-shell">
+      {toast && (
+        <div
+          className="msg-toast"
+          onClick={() => { setActiveTab('messages'); setViewingUserId(toast.senderId); setOverlay('messageThread'); setToast(null); }}
+        >
+          <div className="msg-toast-avatar">{toast.name[0]?.toUpperCase()}</div>
+          <div className="msg-toast-body">
+            <div className="msg-toast-name">{toast.name}</div>
+            <div className="msg-toast-text">{toast.body}</div>
+          </div>
+        </div>
+      )}
       {overlay === 'listingDetail' && viewingUser && (
         <ListingDetail
           user={viewingUser}
@@ -225,7 +283,7 @@ export default function App() {
       {!overlay && activeTab === 'profile' && (
         <Settings currentUser={currentUser} onSignOut={() => supabase.auth.signOut()} onRetake={() => startEdit(currentUser)} />
       )}
-      {!overlay && <TabBar active={activeTab} onChange={setActiveTab} />}
+      {!overlay && <TabBar active={activeTab} onChange={setActiveTab} unread={hasUnreadMessages} />}
     </div>
   );
 }

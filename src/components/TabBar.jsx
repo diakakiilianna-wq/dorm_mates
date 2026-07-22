@@ -7,7 +7,7 @@ const TABS = [
   { key: 'profile', label: 'Profile', Icon: IconUser },
 ];
 
-export default function TabBar({ active, onChange }) {
+export default function TabBar({ active, onChange, unread }) {
   return (
     <nav className="tab-bar">
       {TABS.map(t => (
@@ -16,7 +16,10 @@ export default function TabBar({ active, onChange }) {
           className={`tab-btn${active === t.key ? ' active' : ''}`}
           onClick={() => onChange(t.key)}
         >
-          <t.Icon size={21} filled={t.key === 'favorites' && active === t.key} />
+          <span style={{ position: 'relative', display: 'inline-flex' }}>
+            <t.Icon size={21} filled={t.key === 'favorites' && active === t.key} />
+            {t.key === 'messages' && unread && <span className="tab-badge-dot" />}
+          </span>
           <span>{t.label}</span>
         </button>
       ))}
