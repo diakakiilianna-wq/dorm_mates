@@ -1111,7 +1111,9 @@
       "conflict": 4.333333333333333,
       "structure": 4.666666666666667
     },
-    "favorites": [],
+    "favorites": [
+      "2ce8b9aa-396e-4a84-a4bb-02a144abed74"
+    ],
     "takenAt": "2026-07-22T15:26:58.238Z"
   }
 ]
