@@ -32,6 +32,15 @@ export default function Messages({ currentUser, allUsers, onOpen }) {
     .map(c => ({ ...c, user: allUsers.find(u => u.id === c.otherId) }))
     .filter(t => t.user);
 
+  function handleOpen(otherId) {
+    // Optimistic: hide the dot immediately rather than waiting on the next
+    // poll — MessageThread itself calls markThreadRead on the server.
+    setConversations(list => list.map(c => (
+      c.otherId === otherId ? { ...c, lastMessage: { ...c.lastMessage, read: true } } : c
+    )));
+    onOpen(otherId);
+  }
+
   return (
     <div className="screen">
       <div className="screen-header"><h1 style={{ fontSize: 28 }}>Messages</h1></div>
@@ -44,24 +53,30 @@ export default function Messages({ currentUser, allUsers, onOpen }) {
             <p style={{ fontSize: 13, color: 'var(--color-neutral-600)', margin: 0 }}>Start a conversation from a favorited profile — messages open here once you do.</p>
           </div>
         )}
-        {threads.map(t => (
-          <button
-            key={t.otherId}
-            className="card"
-            style={{ padding: 12, textAlign: 'left', border: 'none', cursor: 'pointer', display: 'flex', gap: 12, alignItems: 'center' }}
-            onClick={() => onOpen(t.otherId)}
-          >
-            <div style={{ width: 44, height: 44, borderRadius: 999, flexShrink: 0, background: 'linear-gradient(160deg,#ffe1d0,#ffc6a5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-heading)', fontSize: 15, color: 'var(--color-accent-700)' }}>
-              {t.user.name[0]?.toUpperCase()}
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontFamily: 'var(--font-heading)', fontSize: 15 }}>{t.user.name}</div>
-              <div style={{ fontSize: 12, color: 'var(--color-neutral-600)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                {t.lastMessage.sender_id === currentUser.id ? 'You: ' : ''}{t.lastMessage.body}
+        {threads.map(t => {
+          const unread = t.lastMessage.recipient_id === currentUser.id && !t.lastMessage.read;
+          return (
+            <button
+              key={t.otherId}
+              className="card"
+              style={{ padding: 12, textAlign: 'left', border: 'none', cursor: 'pointer', display: 'flex', gap: 12, alignItems: 'center' }}
+              onClick={() => handleOpen(t.otherId)}
+            >
+              <div style={{ position: 'relative', flexShrink: 0 }}>
+                <div style={{ width: 44, height: 44, borderRadius: 999, background: 'linear-gradient(160deg,#ffe1d0,#ffc6a5)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-heading)', fontSize: 15, color: 'var(--color-accent-700)' }}>
+                  {t.user.name[0]?.toUpperCase()}
+                </div>
+                {unread && <span className="tab-badge-dot" style={{ top: 0, right: 0 }} />}
               </div>
-            </div>
-          </button>
-        ))}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontFamily: 'var(--font-heading)', fontSize: 15, fontWeight: unread ? 700 : 400 }}>{t.user.name}</div>
+                <div style={{ fontSize: 12, color: 'var(--color-neutral-600)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {t.lastMessage.sender_id === currentUser.id ? 'You: ' : ''}{t.lastMessage.body}
+                </div>
+              </div>
+            </button>
+          );
+        })}
       </div>
     </div>
   );
