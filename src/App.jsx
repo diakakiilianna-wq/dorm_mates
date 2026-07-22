@@ -13,9 +13,9 @@ import Browse from './screens/Browse.jsx';
 import ListingDetail from './screens/ListingDetail.jsx';
 import Favorites from './screens/Favorites.jsx';
 import MessageThread from './screens/MessageThread.jsx';
+import Messages from './screens/Messages.jsx';
 import Settings from './screens/Settings.jsx';
 import TabBar from './components/TabBar.jsx';
-import { IconChat } from './components/icons.jsx';
 
 const emptyDraft = () => ({ id: null, name: '', email: '', gender: 'woman', bio: '', weights: null, quizAnswers: null });
 
@@ -216,13 +216,11 @@ export default function App() {
         />
       )}
       {!overlay && activeTab === 'messages' && (
-        <div className="screen">
-          <div className="screen-header"><h1 style={{ fontSize: 28 }}>Messages</h1></div>
-          <div className="screen-body" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, padding: '40px 20px', textAlign: 'center' }}>
-            <IconChat size={40} style={{ color: 'var(--color-neutral-400)' }} />
-            <p style={{ fontSize: 13, color: 'var(--color-neutral-600)', margin: 0 }}>Start a conversation from a favorited profile — messages open here once you do.</p>
-          </div>
-        </div>
+        <Messages
+          currentUser={currentUser}
+          allUsers={users}
+          onOpen={id => { setViewingUserId(id); setOverlay('messageThread'); }}
+        />
       )}
       {!overlay && activeTab === 'profile' && (
         <Settings currentUser={currentUser} onSignOut={() => supabase.auth.signOut()} onRetake={() => startEdit(currentUser)} />
