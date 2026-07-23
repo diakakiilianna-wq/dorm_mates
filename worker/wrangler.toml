@@ -3,4 +3,4 @@ main = "src/index.js"
 compatibility_date = "2025-01-01"
 
 [vars]
-ALLOWED_ORIGIN = "https://diakakiilianna-wq.github.io"
+ALLOWED_ORIGINS = "https://diakakiilianna-wq.github.io,http://localhost:5173"

@@ -22,11 +22,21 @@ function base64ToUtf8(b64) {
   return new TextDecoder().decode(bytes);
 }
 
+// env.ALLOWED_ORIGINS is a comma-separated allowlist. We echo back the
+// request's Origin only if it's on the list (never a wildcard), so multiple
+// known origins (prod + local dev) can call this Worker.
+function resolveOrigin(request, env) {
+  const allowed = (env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
+  const origin = request.headers.get('Origin');
+  return allowed.includes(origin) ? origin : allowed[0];
+}
+
 function corsHeaders(origin) {
   return {
     'Access-Control-Allow-Origin': origin,
     'Access-Control-Allow-Methods': 'GET,PUT,OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
+    Vary: 'Origin',
   };
 }
 
@@ -129,7 +139,7 @@ async function handleRemind(request, env, cors) {
 
 export default {
   async fetch(request, env) {
-    const cors = corsHeaders(env.ALLOWED_ORIGIN);
+    const cors = corsHeaders(resolveOrigin(request, env));
     const url = new URL(request.url);
 
     if (request.method === 'OPTIONS') return new Response(null, { headers: cors });
